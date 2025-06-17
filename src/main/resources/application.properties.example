@@ -1,0 +1,46 @@
+# =========================
+# = APP INFO             =
+# =========================
+spring.application.name=backend
+
+# =========================
+# = SERVER CONFIG         =
+# =========================
+server.address=0.0.0.0
+server.port=6868
+
+# =========================
+# = SWAGGER OPENAPI       =
+# =========================
+springdoc.api-docs.enabled=true
+springdoc.swagger-ui.enabled=true
+
+logging.level.org.springdoc=DEBUG
+logging.level.org.springframework.web=DEBUG
+
+# =========================
+# = DATABASE CONFIG       =
+# =========================
+spring.datasource.url=jdbc:postgresql://<host>:<port>/<database>
+spring.datasource.username=<your_db_username>
+spring.datasource.password=<your_db_password>
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# =========================
+# = JWT CONFIG            =
+# =========================
+jwt.secret=<your_jwt_secret_here>
+
+# =========================
+# = JPA HIBERNATE         =
+# =========================
+spring.jpa.hibernate.ddl-auto=update
+
+# =========================
+# = CORS CONFIG           =
+# =========================
+spring.mvc.cors.allowed-origins=http://localhost:2004
+spring.mvc.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS,PATCH
+spring.mvc.cors.allowed-headers=*
+spring.mvc.cors.allow-credentials=true
+spring.mvc.cors.max-age=3600
