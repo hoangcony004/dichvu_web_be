@@ -26,7 +26,8 @@ public class JwtService {
 
     @Value("${jwt.secret}")
     private String SECRET_KEY;
-    private final long EXPIRATION_TIME = 3 * 24 * 60 * 60 * 1000;
+    private final long EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
+    // private final long EXPIRATION_TIME = 10000; // 10 seconds for testing
 
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
