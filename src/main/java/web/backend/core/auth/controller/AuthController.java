@@ -1,40 +1,34 @@
 package web.backend.core.auth.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// import com.fasterxml.jackson.core.JsonProcessingException;
-// import com.fasterxml.jackson.databind.ObjectMapper;
-// import com.fasterxml.jackson.databind.node.ArrayNode;
-// import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import web.backend.core.auth.service.JwtService;
 import web.backend.core.customs.Constants;
 import web.backend.core.customs.responses.ApiResponse;
 import web.backend.core.customs.responses.TokenResponse;
 import web.backend.core.dtos.systems.LoginRequestDTO;
 import web.backend.core.dtos.systems.SysUserDTO;
-// import web.backend.core.entitys.systems.SysMenu;
 import web.backend.core.entitys.systems.SysUser;
 import web.backend.modules.repository.system.SysUserRepository;
 
 @RestController
 @RequestMapping("/api")
 public class AuthController {
-
-    // private static final Logger logger =
-    // LoggerFactory.getLogger(AuthController.class);
-
     private final JwtService jwtService;
 
     public AuthController(JwtService jwtService) {
@@ -44,81 +38,47 @@ public class AuthController {
     @Autowired
     private SysUserRepository sysUserRepository;
 
-    // @Autowired
-    // private SysRoleMenuRepository sysRoleMenuRepository;
-
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<TokenResponse>> login(@RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<ApiResponse<TokenResponse>> login(
+            @RequestBody LoginRequestDTO loginRequest,
+            HttpServletResponse response) {
+
         String username = loginRequest.getUsername();
         String rawPassword = loginRequest.getPassword();
-        // String menuUser = "";
 
         SysUser user = sysUserRepository.findByUsername(username);
 
         if (user == null || !passwordEncoder.matches(rawPassword, user.getPassword())) {
-            ApiResponse<TokenResponse> response = new ApiResponse<>(
-                    ApiResponse.Status.ERROR,
-                    Constants.ApiMessage.LOGIN_FALSE,
-                    Constants.ApiCode.UNAUTHORIZED);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new ApiResponse<>(ApiResponse.Status.ERROR, Constants.ApiMessage.LOGIN_FALSE,
+                            Constants.ApiCode.UNAUTHORIZED));
         }
-        // Lấy danh sách vai trò từ repository
+
         List<String> roles = sysUserRepository.findRolesByUsername(username);
 
-        // Long userId = user.getId();
-        // List<Object[]> menusWithPermission =
-        // sysUserRepository.findMenuByUserId(userId);
+        String access_token = jwtService.generateAccessToken(user.getUsername(), roles, user.getUnitcode());
+        String refresh_token = jwtService.generateRefreshToken(user.getUsername());
 
-        // ObjectMapper mapper = new ObjectMapper();
-        // ArrayNode menuArray = mapper.createArrayNode();
+        // Ghi refresh token vào cookie
+        Cookie cookie = new Cookie("refresh_token", refresh_token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // nếu chưa dùng HTTPS, sau này nên set true
+        cookie.setPath("/");
+        cookie.setMaxAge((int) TimeUnit.DAYS.toSeconds(7));
+        response.addCookie(cookie);
 
-        // if (!menusWithPermission.isEmpty()) {
-        // for (Object[] result : menusWithPermission) {
-        // SysMenu menu = (SysMenu) result[0];
-        // String permissionType = (String) result[1];
-        // String link = result.length > 2 ? (String) result[2] : "";
-        // String icon = result.length > 3 ? (String) result[3] : "";
-        // String label = result.length > 4 ? (String) result[4] : "";
-        // Long parent = (result.length > 5 && result[5] != null) ? (Long) result[5] :
-        // null;
-
-        // ObjectNode menuNode = mapper.createObjectNode();
-        // menuNode.put("id", menu.getId());
-        // menuNode.put("label", label);
-        // menuNode.put("link", link);
-        // menuNode.put("icon", icon);
-        // menuNode.put("permission", permissionType);
-        // if (parent != null) {
-        // menuNode.put("parent", parent);
-        // } else {
-        // menuNode.putNull("parent");
-        // }
-
-        // menuArray.add(menuNode);
-        // }
-        // }
-
-        // try {
-        // menuUser = mapper.writeValueAsString(menuArray);
-        // } catch (JsonProcessingException e) {
-        // System.err.println("Error while converting menuArray to JSON: " +
-        // e.getMessage());
-        // }
-        // Tạo token với username và roles
-        String token = jwtService.generateToken(user.getUsername(), roles, user.getUnitcode());
         SysUserDTO userDto = new SysUserDTO(user);
-        TokenResponse tokenData = new TokenResponse(token, userDto);
+        TokenResponse tokenData = new TokenResponse(access_token, userDto);
 
-        // Trả về kết quả thành công
-        ApiResponse<TokenResponse> response = new ApiResponse<>(
-                ApiResponse.Status.SUCCESS,
+        ApiResponse<TokenResponse> responseBody = new ApiResponse<>(ApiResponse.Status.SUCCESS,
                 Constants.ApiMessage.LOGIN_SUCCESS,
                 Constants.ApiCode.OK,
                 tokenData);
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(responseBody);
     }
 
     @PostMapping("/logout")
@@ -148,6 +108,41 @@ public class AuthController {
                     Constants.ApiCode.INTERNAL_SERVER_ERROR);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @PostMapping("/auth/refresh-token")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        String refreshToken = null;
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refresh_token".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No refresh token found");
+        }
+
+        String username = jwtService.extractUsername(refreshToken);
+        if (username == null || username.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: no username found");
+        }
+
+        SysUser user = sysUserRepository.findByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        }
+
+        List<String> roles = sysUserRepository.findRolesByUsername(username);
+        // Bạn có thể lấy roles + unitCode từ DB nếu cần (để sinh lại access token)
+
+        String newAccessToken = jwtService.generateAccessToken(username, roles, user.getUnitcode());
+
+        return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
     }
 
 }

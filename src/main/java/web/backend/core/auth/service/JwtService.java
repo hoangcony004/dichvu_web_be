@@ -26,8 +26,10 @@ public class JwtService {
 
     @Value("${jwt.secret}")
     private String SECRET_KEY;
-    private final long EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000;
-    // private final long EXPIRATION_TIME = 10000; // 10 seconds for testing
+    private final long ACCESS_TOKEN_EXPIRATION = 60 * 60 * 1000; // 1 giờ
+    // private final long ACCESS_TOKEN_EXPIRATION = 10000; // 10 giây
+    private final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7 ngày
+    // private final long REFRESH_TOKEN_EXPIRATION = 15000; // 7 ngày
 
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
@@ -36,20 +38,42 @@ public class JwtService {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username, List<String> roles, String unitCode) {
-        String token = Jwts.builder()
+    // public String generateToken(String username, List<String> roles, String
+    // unitCode) {
+    // String token = Jwts.builder()
+    // .setSubject(username)
+    // .claim("roles", roles)
+    // .claim("unitcode", unitCode)
+    // .setIssuedAt(new Date())
+    // .setExpiration(new Date(System.currentTimeMillis() +
+    // ACCESS_TOKEN_EXPIRATION))
+    // .signWith(getSignKey(), SignatureAlgorithm.HS256)
+    // .compact();
+    // return token;
+    // }
+
+    public String generateAccessToken(String username, List<String> roles, String unitCode) {
+        return Jwts.builder()
                 .setSubject(username)
                 .claim("roles", roles)
                 .claim("unitcode", unitCode)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
-        return token;
     }
 
-    public String generateToken(String username, String unitCode) {
-        return generateToken(username, Collections.emptyList(), unitCode);
+    public String generateAccessToken(String username, String unitCode) {
+        return generateAccessToken(username, Collections.emptyList(), unitCode);
+    }
+
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String extractUsername(String token) {

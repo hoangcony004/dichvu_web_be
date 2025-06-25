@@ -3,22 +3,22 @@ package web.backend.core.customs.responses;
 import web.backend.core.dtos.systems.SysUserDTO;
 
 public class TokenResponse {
-    private String token;
+    private String acces_token;
     // private String menu;
     private SysUserDTO user;
 
-    public TokenResponse(String token, SysUserDTO user) {
-        this.token = token;
+    public TokenResponse(String acces_token, SysUserDTO user) {
+        this.acces_token = acces_token;
         // this.menu = menu;
         this.user = user;
     }
 
-    public String getToken() {
-        return token;
+    public String getAccessToken() {
+        return acces_token;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setAccessToken(String acces_token) {
+        this.acces_token = acces_token;
     }
 
     // public String getMenu() {
