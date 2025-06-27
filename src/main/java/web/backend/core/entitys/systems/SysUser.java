@@ -1,21 +1,13 @@
 package web.backend.core.entitys.systems;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import web.backend.core.bases.BaseEntity;
 
 @Entity
 @Table(name = "sys_user")
-public class SysUser {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class SysUser extends BaseEntity {
 
     @Column(name = "fullname", length = 255)
     private String fullname;
@@ -44,22 +36,12 @@ public class SysUser {
     @Column(name = "status", nullable = false)
     private Short status = 1;
 
-    @Column(name = "unitcode")
-    private String unitcode;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
     public SysUser() {
     }
 
     public SysUser(String fullname, String username, String password, String email, String phone,
             Short gender, String address, String avatarUrl,
-            Short status, String unitcode,
-            LocalDateTime createdAt, LocalDateTime updatedAt) {
+            Short status) {
         this.fullname = fullname;
         this.username = username;
         this.password = password;
@@ -69,20 +51,9 @@ public class SysUser {
         this.address = address;
         this.avatarUrl = avatarUrl;
         this.status = status;
-        this.unitcode = unitcode;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     // Getters và Setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getFullname() {
         return fullname;
@@ -154,29 +125,5 @@ public class SysUser {
 
     public void setStatus(Short status) {
         this.status = status;
-    }
-
-    public String getUnitcode() {
-        return unitcode;
-    }
-
-    public void setUnitcode(String unitcode) {
-        this.unitcode = unitcode;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

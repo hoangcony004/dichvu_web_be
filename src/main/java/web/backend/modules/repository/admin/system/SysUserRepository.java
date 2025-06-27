@@ -1,14 +1,15 @@
-package web.backend.modules.repository.system;
+package web.backend.modules.repository.admin.system;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import web.backend.core.entitys.systems.SysUser;
 
-public interface SysUserRepository extends JpaRepository<SysUser, Long> {
+public interface SysUserRepository extends JpaRepository<SysUser, Long>, JpaSpecificationExecutor<SysUser> {
 
     SysUser findByUsername(String username);
 

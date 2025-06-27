@@ -24,7 +24,7 @@ import web.backend.core.customs.responses.TokenResponse;
 import web.backend.core.dtos.systems.LoginRequestDTO;
 import web.backend.core.dtos.systems.SysUserDTO;
 import web.backend.core.entitys.systems.SysUser;
-import web.backend.modules.repository.system.SysUserRepository;
+import web.backend.modules.repository.admin.system.SysUserRepository;
 
 @RestController
 @RequestMapping("/api")
