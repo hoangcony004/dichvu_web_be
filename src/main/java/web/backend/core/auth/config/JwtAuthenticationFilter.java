@@ -18,7 +18,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import web.backend.core.auth.service.JwtService;
-import web.backend.core.customs.responses.ApiResponse;
+import web.backend.core.customs.responses.ApiResponseCustom;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -57,8 +57,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         chain.doFilter(request, response);
                         return;
                     } else {
-                        ApiResponse<Object> apiResponse = new ApiResponse<>(
-                                ApiResponse.Status.ERROR,
+                        ApiResponseCustom<Object> apiResponse = new ApiResponseCustom<>(
+                                ApiResponseCustom.Status.ERROR,
                                 "Phiên đăng nhập hết hạn.",
                                 HttpServletResponse.SC_UNAUTHORIZED);
 

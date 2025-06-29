@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import web.backend.core.entitys.systems.SysToken;
 import web.backend.core.entitys.systems.SysUser;
 import web.backend.modules.repository.admin.system.SysTokenRepository;
-import web.backend.modules.repository.admin.system.SysUserRepository;
+import web.backend.modules.repository.admin.system.sys_user.SysUserRepository;
 
 import java.sql.Timestamp;
 

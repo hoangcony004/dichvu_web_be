@@ -67,8 +67,13 @@ public abstract class BaseServiceImpl<T extends BaseEntity, ID> implements BaseS
     @Override
     public Page<T> findAll(Pageable pageable, String keyword) {
         try {
-            Specification<T> spec = new GenericSearchSpecification<>(keyword);
-            return specificationExecutor.findAll(spec, pageable);
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                Specification<T> spec = new GenericSearchSpecification<>(keyword);
+                // return repository.findAll(spec, pageable);
+                return specificationExecutor.findAll(spec, pageable);
+            } else {
+                return repository.findAll(pageable);
+            }
         } catch (Exception e) {
             throw new RuntimeException("Lỗi khi phân trang tìm kiếm: " + e.getMessage(), e);
         }

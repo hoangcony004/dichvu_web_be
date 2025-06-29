@@ -1,4 +1,4 @@
-package web.backend.modules.repository.admin.system;
+package web.backend.modules.repository.admin.system.sys_user;
 
 import java.util.List;
 

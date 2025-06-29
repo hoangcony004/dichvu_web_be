@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import web.backend.core.customs.Constants;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ApiResponse<T> {
+public class ApiResponseCustom<T> {
 
     public enum Status {
         SUCCESS(Constants.Status.SUCCESS),
@@ -30,7 +30,7 @@ public class ApiResponse<T> {
     private T data; // Kiểu generic T
 
     // Constructor thành công
-    public ApiResponse(Status status, String message, int code, T data) {
+    public ApiResponseCustom(Status status, String message, int code, T data) {
         this.status = status;
         this.message = message;
         this.code = code;
@@ -38,7 +38,7 @@ public class ApiResponse<T> {
     }
 
     // Constructor lỗi
-    public ApiResponse(Status status, String message, int code) {
+    public ApiResponseCustom(Status status, String message, int code) {
         this.status = status;
         this.message = message;
         this.code = code;
@@ -77,3 +77,4 @@ public class ApiResponse<T> {
         this.data = data;
     }
 }
+

@@ -14,17 +14,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import web.backend.core.auth.service.JwtService;
 import web.backend.core.customs.Constants;
-import web.backend.core.customs.responses.ApiResponse;
+import web.backend.core.customs.responses.ApiResponseCustom;
 import web.backend.core.customs.responses.TokenResponse;
 import web.backend.core.dtos.systems.LoginRequestDTO;
 import web.backend.core.dtos.systems.SysUserDTO;
 import web.backend.core.entitys.systems.SysUser;
-import web.backend.modules.repository.admin.system.SysUserRepository;
+import web.backend.modules.repository.admin.system.sys_user.SysUserRepository;
 
 @RestController
 @RequestMapping("/api")
@@ -42,7 +43,7 @@ public class AuthController {
     private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<TokenResponse>> login(
+    public ResponseEntity<ApiResponseCustom<TokenResponse>> login(
             @RequestBody LoginRequestDTO loginRequest,
             HttpServletResponse response) {
 
@@ -53,7 +54,7 @@ public class AuthController {
 
         if (user == null || !passwordEncoder.matches(rawPassword, user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    new ApiResponse<>(ApiResponse.Status.ERROR, Constants.ApiMessage.LOGIN_FALSE,
+                    new ApiResponseCustom<>(ApiResponseCustom.Status.ERROR, Constants.ApiMessage.LOGIN_FALSE,
                             Constants.ApiCode.UNAUTHORIZED));
         }
 
@@ -73,7 +74,7 @@ public class AuthController {
         SysUserDTO userDto = new SysUserDTO(user);
         TokenResponse tokenData = new TokenResponse(access_token, userDto);
 
-        ApiResponse<TokenResponse> responseBody = new ApiResponse<>(ApiResponse.Status.SUCCESS,
+        ApiResponseCustom<TokenResponse> responseBody = new ApiResponseCustom<>(ApiResponseCustom.Status.SUCCESS,
                 Constants.ApiMessage.LOGIN_SUCCESS,
                 Constants.ApiCode.OK,
                 tokenData);
@@ -82,7 +83,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Object>> logout(@RequestBody String token) {
+    public ResponseEntity<ApiResponseCustom<Object>> logout(@RequestBody String token) {
 
         try {
             // Loại bỏ dấu ngoặc kép và khoảng trắng thừa
@@ -96,14 +97,14 @@ public class AuthController {
             String username = jwtService.extractUsername(token);
             jwtService.blacklistToken(token, username);
 
-            ApiResponse<Object> response = new ApiResponse<>(
-                    ApiResponse.Status.SUCCESS,
+            ApiResponseCustom<Object> response = new ApiResponseCustom<>(
+                    ApiResponseCustom.Status.SUCCESS,
                     Constants.ApiMessage.LOGOUT_SUCCESS,
                     Constants.ApiCode.OK);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            ApiResponse<Object> response = new ApiResponse<>(
-                    ApiResponse.Status.ERROR,
+            ApiResponseCustom<Object> response = new ApiResponseCustom<>(
+                    ApiResponseCustom.Status.ERROR,
                     "Lỗi khi đăng xuất: " + e.getMessage(),
                     Constants.ApiCode.INTERNAL_SERVER_ERROR);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
