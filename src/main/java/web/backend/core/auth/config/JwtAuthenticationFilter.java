@@ -32,55 +32,63 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
 
-        String path = req.getRequestURI();
-        if (path.startsWith("/api/private/")) {
-            String authHeader = req.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                try {
-                    if (jwtService.isValidToken(token)) {
-                        System.out.println("✅ Token hop le");
-                        String username = jwtService.extractUsername(token);
-                        List<String> roles = jwtService.extractRoles(token);
+        String path = request.getRequestURI();
 
-                        List<GrantedAuthority> authorities = roles.stream()
-                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                                .collect(Collectors.toList());
+        // Bỏ qua những API công khai
+        if (path.startsWith("/api/login")
+                || path.startsWith("/api/logout")
+                || path.startsWith("/api/auth/refresh-token")
+                || path.startsWith("/swagger")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/public")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                username, null, authorities);
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                if (jwtService.isValidToken(token)) {
+                    String username = jwtService.extractUsername(token);
+                    List<String> roles = jwtService.extractRoles(token);
 
-                        chain.doFilter(request, response);
-                        return;
-                    } else {
-                        ApiResponseCustom<Object> apiResponse = new ApiResponseCustom<>(
-                                ApiResponseCustom.Status.ERROR,
-                                "Phiên đăng nhập hết hạn.",
-                                HttpServletResponse.SC_UNAUTHORIZED);
+                    List<GrantedAuthority> authorities = roles.stream()
+                            .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                            .collect(Collectors.toList());
 
-                        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        res.setContentType("application/json");
-                        res.setCharacterEncoding("UTF-8");
-
-                        ObjectMapper mapper = new ObjectMapper();
-                        res.getWriter().write(mapper.writeValueAsString(apiResponse));
-
-                    }
-
-                } catch (Exception e) {
-                    res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    res.getWriter().write("Token khong hop le: " + e.getMessage());
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            username, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    sendErrorResponse(response, "Phiên đăng nhập hết hạn.");
+                    return;
                 }
-            } else {
-                res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                res.getWriter().write("Thieu token.");
+            } catch (Exception e) {
+                sendErrorResponse(response, "Token không hợp lệ: " + e.getMessage());
+                return;
             }
         } else {
-            chain.doFilter(request, response);
+            sendErrorResponse(response, "Thiếu token.");
+            return;
         }
+
+        chain.doFilter(request, response);
     }
+
+    private void sendErrorResponse(HttpServletResponse res, String message) throws IOException {
+        ApiResponseCustom<Object> apiResponse = new ApiResponseCustom<>(
+                ApiResponseCustom.Status.ERROR,
+                message,
+                HttpServletResponse.SC_UNAUTHORIZED);
+
+        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        res.setContentType("application/json");
+        res.setCharacterEncoding("UTF-8");
+
+        ObjectMapper mapper = new ObjectMapper();
+        res.getWriter().write(mapper.writeValueAsString(apiResponse));
+    }
+
 }

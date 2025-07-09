@@ -2,6 +2,7 @@ package web.backend.core.entitys.systems;
 
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -39,7 +40,7 @@ public class SysUser extends BaseEntity {
     @Column(name = "status", nullable = false)
     private Short status = 1;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SysUserRole> sysUserRoles;
 
     public SysUser() {

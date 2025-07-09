@@ -21,65 +21,63 @@ import web.backend.core.auth.custom.CustomAuthenticationEntryPoint;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+        public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Thêm cấu hình CORS
-                .csrf(csrf -> csrf.disable())
-                .authorizeRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/login",
-                                "/api/logout",
-                                "/api/auth/refresh-token",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/public/**")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable())
-                .exceptionHandling(handling -> handling
-                        .defaultAuthenticationEntryPointFor(
-                                new CustomAuthenticationEntryPoint(),
-                                new org.springframework.security.web.util.matcher.AntPathRequestMatcher(
-                                        "/api/private/**"))
-                        .accessDeniedHandler(new CustomAccessDeniedHandler()))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Thêm cấu hình CORS
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeRequests(auth -> auth
+                                                .requestMatchers("/api/login", "/api/logout", "/api/auth/refresh-token",
+                                                                "/swagger-ui/**", "/v3/api-docs/**", "/public/**")
+                                                .permitAll()
+                                                .requestMatchers("/api/private/**").hasRole("ADMIN")
+                                                .requestMatchers("/api/apps/**").hasRole("USER")
+                                                .anyRequest().authenticated())
 
-        return http.build();
-    }
+                                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .formLogin(form -> form.disable())
+                                .httpBasic(basic -> basic.disable())
+                                .exceptionHandling(handling -> handling
+                                                .defaultAuthenticationEntryPointFor(
+                                                                new CustomAuthenticationEntryPoint(),
+                                                                new org.springframework.security.web.util.matcher.AntPathRequestMatcher(
+                                                                                "/api/private/**"))
+                                                .accessDeniedHandler(new CustomAccessDeniedHandler()))
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:2004"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "Origin",
-                "X-Requested-With",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
+        @Bean
+        public BCryptPasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOrigins(Arrays.asList("http://localhost:2004"));
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+                configuration.setAllowedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Type",
+                                "Accept",
+                                "Origin",
+                                "X-Requested-With",
+                                "Access-Control-Request-Method",
+                                "Access-Control-Request-Headers"));
+                configuration.setExposedHeaders(Arrays.asList("Authorization"));
+                configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 }

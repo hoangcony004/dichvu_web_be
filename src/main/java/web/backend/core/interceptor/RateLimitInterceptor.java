@@ -23,30 +23,35 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final RequestQueueService requestQueueService;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
-ConsumptionProbe probe = rateLimiterService.tryConsumeAndGetProbe();
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws IOException {
+        ConsumptionProbe probe = rateLimiterService.tryConsumeAndGetProbe();
 
-if (probe.isConsumed()) {
-    System.out.println("✅ Token còn: " + probe.getRemainingTokens());
-    return true;
-} else {
-    // Ước tính thời gian chờ (giây)
-    long nanosToWait = probe.getNanosToWaitForRefill();
-    long secondsToWait = Duration.ofNanos(nanosToWait).getSeconds();
+        if (probe.isConsumed()) {
+            System.out.println("✅ Token còn: " + probe.getRemainingTokens());
+            return true;
+        } else {
+            // Ước tính thời gian chờ (giây)
+            long nanosToWait = probe.getNanosToWaitForRefill();
+            long secondsToWait = Duration.ofNanos(nanosToWait).getSeconds();
 
-    String name = request.getParameter("name");
-    if (name == null) name = "anonymous";
-    requestQueueService.enqueue(name);
+            String name = request.getParameter("name");
+            if (name == null)
+                name = "anonymous";
+            requestQueueService.enqueue(name);
 
-    response.setStatus(ApiCode.TOO_MANY_REQUESTS);
-    response.getWriter().write(
-        "Truy cập đang tăng. Đã thêm vào hàng đợi: "
-        + requestQueueService.size()
-        + ". Thời gian chờ dự kiến: "
-        + secondsToWait + " giây."
-    );
-    return false;
-}
+            response.setStatus(ApiCode.TOO_MANY_REQUESTS);
+            response.setContentType("application/json;charset=UTF-8");
+
+            String json = "{"
+                    + "\"message\": \"Truy cập đang tăng. Đã thêm vào hàng đợi.\","
+                    + "\"queueSize\": " + requestQueueService.size() + ","
+                    + "\"estimatedWaitTime\": " + secondsToWait
+                    + "}";
+
+            response.getWriter().write(json);
+            return false;
+        }
 
     }
 }

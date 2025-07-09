@@ -16,8 +16,8 @@ public class RateLimiterService {
 
     public RateLimiterService() {
         Bandwidth limit = Bandwidth.classic(
-                300,                              // Quota: 300 request
-                Refill.greedy(300, Duration.ofMinutes(1))  // Tự refill 300 token mỗi phút
+                500,
+                Refill.greedy(500, Duration.ofMinutes(1))
         );
         this.bucket = Bucket4j.builder()
                 .addLimit(limit)
@@ -33,6 +33,6 @@ public class RateLimiterService {
     }
 
     public ConsumptionProbe tryConsumeAndGetProbe() {
-    return bucket.tryConsumeAndReturnRemaining(1);
-}
+        return bucket.tryConsumeAndReturnRemaining(1);
+    }
 }

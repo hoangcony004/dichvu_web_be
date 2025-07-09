@@ -3,10 +3,13 @@ package web.backend.core.auth.controller;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,7 +61,8 @@ public class AuthController {
                             Constants.ApiCode.UNAUTHORIZED));
         }
 
-        List<String> roles = sysUserRepository.findRolesByUsername(username);
+        List<String> roles = sysUserRepository.findRolesByUserId(user.getId());
+        // System.out.println("Roles for user " + username + ": " + roles);
 
         String access_token = jwtService.generateAccessToken(user.getUsername(), roles, user.getUnitcode());
         String refresh_token = jwtService.generateRefreshToken(user.getUsername());
@@ -138,7 +142,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         }
 
-        List<String> roles = sysUserRepository.findRolesByUsername(username);
+        List<String> roles = sysUserRepository.findRolesByUserId(user.getId());
+
         // Bạn có thể lấy roles + unitCode từ DB nếu cần (để sinh lại access token)
 
         String newAccessToken = jwtService.generateAccessToken(username, roles, user.getUnitcode());

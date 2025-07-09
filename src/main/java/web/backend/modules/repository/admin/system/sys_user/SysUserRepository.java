@@ -16,7 +16,7 @@ public interface SysUserRepository extends JpaRepository<SysUser, Long>, JpaSpec
     @Query("SELECT r.name FROM SysUserRole ur " +
             "JOIN ur.user u " +
             "JOIN ur.role r " +
-            "WHERE u.username = :username")
-    List<String> findRolesByUsername(@Param("username") String username);
+            "WHERE u.id = :userId")
+    List<String> findRolesByUserId(@Param("userId") Long userId);
 
 }
