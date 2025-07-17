@@ -40,6 +40,9 @@ public class SysUser extends BaseEntity {
     @Column(name = "status", nullable = false)
     private Short status = 1;
 
+    @Column(name = "balance", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    private Double balance = 0.00;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SysUserRole> sysUserRoles;
 
@@ -47,7 +50,7 @@ public class SysUser extends BaseEntity {
     }
 
     public SysUser(String fullname, String username, String password, String email, String phone,
-            Short gender, String address, String avatarUrl,
+            Short gender, String address, String avatarUrl, Double balance,
             Short status) {
         this.fullname = fullname;
         this.username = username;
@@ -58,6 +61,7 @@ public class SysUser extends BaseEntity {
         this.address = address;
         this.avatarUrl = avatarUrl;
         this.status = status;
+        this.balance = balance;
     }
 
     // Getters và Setters
@@ -124,6 +128,14 @@ public class SysUser extends BaseEntity {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
     }
 
     public Short getStatus() {
